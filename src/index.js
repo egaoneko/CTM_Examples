@@ -1,43 +1,40 @@
 import * as THREE from 'three'
 import * as math from "mathjs";
+import orbit from "three-orbit-controls";
+
+let renderer;
+let camera;
+let scene;
 
 // once everything is loaded, we run our Three.js stuff.
 function init() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
     // create a scene, that will hold all our elements such as objects, cameras and lights.
-    var scene = new THREE.Scene();
+    scene = new THREE.Scene();
 
     // create a camera, which defines where we're looking at.
-    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000);
+    camera.position.set(50, 80, 130);
+    camera.lookAt(0, 0, 0);
 
     // create a render and set the size
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setClearColor(new THREE.Color(0xEEEEEE));
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+
+    const grid = new THREE.GridHelper(200, 10);
+    scene.add(grid);
 
     // show axes in the screen
-    var axes = new THREE.AxisHelper(20);
+    const axes = new THREE.AxisHelper(100);
+    axes.position.set(0, 0, 0);
     scene.add(axes);
 
-    // create the ground plane
-    var planeGeometry = new THREE.PlaneGeometry(60, 20);
-    var planeMaterial = new THREE.MeshBasicMaterial({color: 0xcccccc});
-    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-
-    // rotate and position the plane
-    plane.rotation.x = -0.5 * Math.PI;
-    plane.position.x = 15;
-    plane.position.y = 0;
-    plane.position.z = 0;
-
-    // add the plane to the scene
-    scene.add(plane);
-
-    // position and point the camera to the center of the scene
-    camera.position.x = -30;
-    camera.position.y = 40;
-    camera.position.z = 30;
-    camera.lookAt(scene.position);
+    const OrbitControls = orbit(THREE);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.screenSpacePanning = true;
 
     // add the output of the renderer to the html element
     document.getElementById("WebGL-output").appendChild(renderer.domElement);
@@ -47,6 +44,11 @@ function init() {
 
     // render the scene
     renderer.render(scene, camera);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera)
 }
 
 function draw(scene) {
@@ -66,14 +68,21 @@ function draw(scene) {
     var res = math.transpose(math.multiply(A, X));
 
     for(var i = 0; i < res.length; i++) {
-        console.log(res[i][0], res[i][1], res[i][2]);
-
         var dotGeometry = new THREE.Geometry();
         dotGeometry.vertices.push(new THREE.Vector3(res[i][0], res[i][1], res[i][2]));
-        var dotMaterial = new THREE.PointsMaterial({color: 0x7777ff, size: 1, sizeAttenuation: false});
+        var dotMaterial = new THREE.PointsMaterial({ color: 0x7777ff, size: 1, sizeAttenuation: false });
         var dot = new THREE.Points(dotGeometry, dotMaterial);
         scene.add(dot)
     }
 }
 
-window.onload = init;
+window.onload = function() {
+    init();
+    animate();
+};
+
+window.onresize = function() {
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+}
