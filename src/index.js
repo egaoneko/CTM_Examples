@@ -52,28 +52,30 @@ function animate() {
 }
 
 function draw(scene) {
-    var A = math.transpose([
+  const A = math.transpose([
         [ 1, 0, 1.65 ],
         [ 0, 1, 1 ]
     ]);
 
-    var tmpX = [];
-    for(var i = -5; i < 5; i+=0.2) {
-        for(var j = -5; j < 5; j+=0.2) {
+    const tmpX = [];
+    for(let i = -5; i < 5; i+=0.2) {
+        for(let j = -5; j < 5; j+=0.2) {
             tmpX.push([ i, j ]);
         }
     }
 
-    var X = math.transpose(tmpX);
-    var res = math.transpose(math.multiply(A, X));
+    const X = math.transpose(tmpX);
+    const res = math.transpose(math.multiply(A, X));
+
+    const geom = new THREE.Geometry();
+    const material = new THREE.PointsMaterial({color: 0x7777ff, size: 1, sizeAttenuation: false});
 
     for(var i = 0; i < res.length; i++) {
-        var dotGeometry = new THREE.Geometry();
-        dotGeometry.vertices.push(new THREE.Vector3(res[i][0], res[i][1], res[i][2]));
-        var dotMaterial = new THREE.PointsMaterial({ color: 0x7777ff, size: 1, sizeAttenuation: false });
-        var dot = new THREE.Points(dotGeometry, dotMaterial);
-        scene.add(dot)
+      geom.vertices.push(new THREE.Vector3(res[i][0], res[i][1], res[i][2]));
     }
+
+    const cloud = new THREE.Points(geom, material);
+    scene.add(cloud)
 }
 
 window.onload = function() {
